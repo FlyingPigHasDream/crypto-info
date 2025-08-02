@@ -9,6 +9,7 @@ import (
 
 var (
 	bitcoinService = services.NewBitcoinService()
+	healthService  = services.NewHealthService()
 )
 
 // HomeController 处理主页请求
@@ -23,11 +24,7 @@ func HomeController(c *gin.Context) {
 
 // HealthController 处理健康检查请求
 func HealthController(c *gin.Context) {
-	response := models.Response{
-		Message: "OK",
-		Status:  http.StatusOK,
-	}
-
+	response := healthService.GetSystemHealth()
 	c.JSON(http.StatusOK, response)
 }
 
