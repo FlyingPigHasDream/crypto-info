@@ -1,0 +1,49 @@
+# 开发环境配置
+app:
+  env: "development"
+  debug: true
+
+server:
+  http:
+    host: "localhost"
+    port: 8080
+  grpc:
+    host: "localhost"
+    port: 9090
+
+log:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+
+database:
+  redis:
+    host: "localhost"
+    port: 6379
+    password: ""
+    db: 0
+  mysql:
+    host: "localhost"
+    port: 3306
+    username: "root"
+    password: "password"
+    database: "crypto_info_dev"
+
+external_api:
+  huobi:
+    timeout: 30s # 开发环境超时时间更长
+  binance:
+    timeout: 30s
+
+monitoring:
+  metrics:
+    enabled: true
+  tracing:
+    enabled: true
+    sample_rate: 1.0 # 开发环境全量采样
+
+rate_limit:
+  enabled: false # 开发环境关闭限流
+
+business:
+  mock_data_enabled: true # 开发环境启用模拟数据

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package crypto.v1;
+
+option go_package = "crypto-info/api/crypto/v1;v1";
+
+// CryptoPriceService 加密货币价格服务
+service CryptoPriceService {
+  // GetPrice 获取加密货币价格
+  rpc GetPrice(GetPriceRequest) returns (GetPriceResponse);
+  
+  // GetVolumeAnalysis 获取交易量分析
+  rpc GetVolumeAnalysis(GetVolumeAnalysisRequest) returns (GetVolumeAnalysisResponse);
+}
+
+// GetPriceRequest 获取价格请求
+message GetPriceRequest {
+  string symbol = 1; // 加密货币符号
+}
+
+// GetPriceResponse 获取价格响应
+message GetPriceResponse {
+  string symbol = 1;     // 加密货币符号
+  double price = 2;      // 价格
+  string source = 3;     // 数据源
+  string updated_at = 4; // 更新时间
+  string currency = 5;   // 货币单位
+}
+
+// GetVolumeAnalysisRequest 获取交易量分析请求
+message GetVolumeAnalysisRequest {
+  string symbol = 1; // 加密货币符号
+  int32 days = 2;    // 分析天数
+}
+
+// VolumeData 交易量数据
+message VolumeData {
+  string date = 1;   // 日期
+  double volume = 2; // 交易量
+  double amount = 3; // 交易额
+}
+
+// GetVolumeAnalysisResponse 获取交易量分析响应
+message GetVolumeAnalysisResponse {
+  string symbol = 1;                // 加密货币符号
+  string period = 2;                // 分析周期
+  repeated VolumeData data = 3;     // 历史交易量数据
+  double avg_volume = 4;            // 平均交易量
+  double max_volume = 5;            // 最大交易量
+  double min_volume = 6;            // 最小交易量
+  double volatility = 7;            // 波动率
+  string trend = 8;                 // 趋势
+  string source = 9;                // 数据源
+  string generated_at = 10;         // 生成时间
+}

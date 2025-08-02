@@ -1,0 +1,89 @@
+# 生产环境配置
+app:
+  env: "production"
+  debug: false
+
+server:
+  http:
+    host: "0.0.0.0"
+    port: 8080
+    read_timeout: 15s
+    write_timeout: 15s
+    idle_timeout: 30s
+  grpc:
+    host: "0.0.0.0"
+    port: 9090
+    timeout: 15s
+
+log:
+  level: "info"
+  format: "json"
+  output: "file"
+  file_path: "/var/log/crypto-info/app.log"
+  max_size: 500
+  max_age: 7
+  max_backups: 30
+  compress: true
+
+database:
+  redis:
+    host: "redis-cluster.internal"
+    port: 6379
+    password: "${REDIS_PASSWORD}"
+    db: 0
+    pool_size: 50
+    min_idle_conns: 10
+    dial_timeout: 3s
+    read_timeout: 2s
+    write_timeout: 2s
+  mysql:
+    host: "mysql-cluster.internal"
+    port: 3306
+    username: "${MYSQL_USERNAME}"
+    password: "${MYSQL_PASSWORD}"
+    database: "crypto_info_prod"
+    max_open_conns: 200
+    max_idle_conns: 50
+    conn_max_lifetime: 1800s
+
+external_api:
+  huobi:
+    timeout: 5s
+    retry_times: 2
+  binance:
+    timeout: 5s
+    retry_times: 2
+
+cache:
+  price_ttl: 60s # 生产环境缓存时间更短
+  volume_ttl: 120s
+  default_ttl: 300s
+
+monitoring:
+  metrics:
+    enabled: true
+    port: 9091
+  tracing:
+    enabled: true
+    jaeger_endpoint: "http://jaeger-collector.monitoring:14268/api/traces"
+    sample_rate: 0.01 # 生产环境低采样率
+  health_check:
+    enabled: true
+    interval: 10s
+
+rate_limit:
+  enabled: true
+  requests_per_second: 1000
+  burst: 2000
+
+security:
+  cors:
+    allowed_origins: ["https://crypto-info.com", "https://api.crypto-info.com"]
+    allow_credentials: false
+  jwt:
+    secret: "${JWT_SECRET}"
+    expire_time: 2h
+
+business:
+  mock_data_enabled: false # 生产环境禁用模拟数据
+  max_analysis_days: 90 # 生产环境限制分析天数
