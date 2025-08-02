@@ -2,24 +2,18 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-	"go-web-study/internal/handlers"
+	"go-web-study/internal/routes"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	http.HandleFunc("/", handlers.HomeHandler)
-	http.HandleFunc("/health", handlers.HealthHandler)
-	http.HandleFunc("/btc-price", handlers.BitcoinPriceHandler)
+	// 创建Gin路由器
+	r := gin.Default()
+
+	// 设置路由
+	routes.SetupRoutes(r)
 
 	fmt.Println("Server starting on port 8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<h1>Welcome to Go Web Study!</h1>")
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "OK")
+	// 启动服务器
+	r.Run(":8080")
 }
