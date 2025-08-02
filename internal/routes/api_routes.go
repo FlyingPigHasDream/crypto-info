@@ -14,6 +14,9 @@ func SetupAPIRoutes(router *gin.Engine) {
 		v1.GET("/health", controllers.HealthController)
 		
 		// 加密货币接口
+		// 通用加密货币价格查询 (适配器模式)
+		v1.GET("/crypto/price", controllers.CryptoPriceController)
+		// 向后兼容的比特币价格路由
 		v1.GET("/btc-price", controllers.BitcoinPriceController)
 		
 		// 未来可以扩展更多API接口

@@ -10,6 +10,9 @@ func SetupCryptoRoutes(router *gin.Engine) {
 	// 加密货币路由组
 	crypto := router.Group("/crypto")
 	{
+		// 通用加密货币价格查询 (适配器模式)
+		crypto.GET("/price", controllers.CryptoPriceController)
+		// 向后兼容的比特币价格路由
 		crypto.GET("/btc-price", controllers.BitcoinPriceController)
 		// 未来可以扩展更多加密货币相关接口
 		// crypto.GET("/eth-price", controllers.EthereumPriceController)
