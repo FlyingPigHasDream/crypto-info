@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package crypto.v1;
+
+option go_package = "crypto-info/kitex_gen/crypto/v1;cryptov1";
+
+// 加密货币价格服务
+service CryptoPriceService {
+  // 获取加密货币价格
+  rpc GetPrice(GetPriceRequest) returns (GetPriceResponse);
+  // 获取BTC价格
+  rpc GetBTCPrice(GetBTCPriceRequest) returns (GetPriceResponse);
+}
+
+// 加密货币交易量服务
+service CryptoVolumeService {
+  // 获取交易量分析
+  rpc GetVolumeAnalysis(GetVolumeAnalysisRequest) returns (GetVolumeAnalysisResponse);
+  // 获取市场交易量波动
+  rpc GetMarketVolumeFluctuation(GetMarketVolumeFluctuationRequest) returns (GetMarketVolumeFluctuationResponse);
+  // 获取交易量对比
+  rpc GetVolumeComparison(GetVolumeComparisonRequest) returns (GetVolumeComparisonResponse);
+  // 获取交易量排行
+  rpc GetTopVolumeCoins(GetTopVolumeCoinsRequest) returns (GetTopVolumeCoinsResponse);
+}
+
+// 健康检查服务
+service HealthService {
+  // 健康检查
+  rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// 请求和响应消息定义
+message GetPriceRequest {
+  string symbol = 1; // 加密货币符号
+}
+
+message GetBTCPriceRequest {}
+
+message GetPriceResponse {
+  string symbol = 1;
+  double price = 2;
+  string currency = 3;
+  int64 timestamp = 4;
+  string source = 5;
+  bool success = 6;
+  string message = 7;
+}
+
+message GetVolumeAnalysisRequest {
+  string symbol = 1;
+  int32 days = 2;
+}
+
+message GetVolumeAnalysisResponse {
+  string symbol = 1;
+  repeated VolumeData volume_data = 2;
+  double average_volume = 3;
+  double total_volume = 4;
+  bool success = 5;
+  string message = 6;
+}
+
+message VolumeData {
+  string date = 1;
+  double volume = 2;
+  double price = 3;
+}
+
+message GetMarketVolumeFluctuationRequest {
+  repeated string symbols = 1;
+  int32 days = 2;
+}
+
+message GetMarketVolumeFluctuationResponse {
+  repeated MarketVolumeFluctuation fluctuations = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message MarketVolumeFluctuation {
+  string symbol = 1;
+  double current_volume = 2;
+  double previous_volume = 3;
+  double fluctuation_percentage = 4;
+  string trend = 5;
+}
+
+message GetVolumeComparisonRequest {
+  repeated string symbols = 1;
+  string time_period = 2;
+}
+
+message GetVolumeComparisonResponse {
+  repeated VolumeComparison comparisons = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message VolumeComparison {
+  string symbol = 1;
+  double volume_24h = 2;
+  double volume_7d = 3;
+  double volume_30d = 4;
+  double market_share = 5;
+}
+
+message GetTopVolumeCoinsRequest {
+  int32 limit = 1;
+  string time_period = 2;
+}
+
+message GetTopVolumeCoinsResponse {
+  repeated TopVolumeCoin coins = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message TopVolumeCoin {
+  string symbol = 1;
+  string name = 2;
+  double volume = 3;
+  double price = 4;
+  double market_cap = 5;
+  int32 rank = 6;
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+  string message = 2;
+  int64 timestamp = 3;
+  map<string, string> details = 4;
+}

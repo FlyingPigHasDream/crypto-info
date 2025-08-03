@@ -122,3 +122,19 @@ business:
   max_analysis_days: 365
   default_analysis_days: 10
   mock_data_enabled: true
+
+# RocketMQ 消息队列配置
+rocketmq:
+  enabled: false
+  name_servers: ["localhost:9876"]
+  producer:
+    group_name: "crypto_info_producer"
+    retry_times: 3
+    send_msg_timeout: 3s
+    compress_level: 4
+  consumer:
+    group_name: "crypto_info_consumer"
+    consume_from_where: "CONSUME_FROM_LAST_OFFSET"
+    consume_message_batch: 1
+    pull_interval: 1s
+    pull_batch_size: 32

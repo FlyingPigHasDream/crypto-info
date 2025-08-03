@@ -22,6 +22,7 @@ type Config struct {
 	RateLimit  RateLimit  `mapstructure:"rate_limit"`
 	Security   Security   `mapstructure:"security"`
 	Business   Business   `mapstructure:"business"`
+	RocketMQ   RocketMQ   `mapstructure:"rocketmq"`
 }
 
 // App 应用配置
@@ -193,6 +194,31 @@ type Business struct {
 	MaxAnalysisDays     int      `mapstructure:"max_analysis_days"`
 	DefaultAnalysisDays int      `mapstructure:"default_analysis_days"`
 	MockDataEnabled     bool     `mapstructure:"mock_data_enabled"`
+}
+
+// RocketMQ 消息队列配置
+type RocketMQ struct {
+	Enabled     bool     `mapstructure:"enabled"`
+	NameServers []string `mapstructure:"name_servers"`
+	Producer    Producer `mapstructure:"producer"`
+	Consumer    Consumer `mapstructure:"consumer"`
+}
+
+// Producer 生产者配置
+type Producer struct {
+	GroupName       string        `mapstructure:"group_name"`
+	RetryTimes      int           `mapstructure:"retry_times"`
+	SendMsgTimeout  time.Duration `mapstructure:"send_msg_timeout"`
+	CompressLevel   int           `mapstructure:"compress_level"`
+}
+
+// Consumer 消费者配置
+type Consumer struct {
+	GroupName           string        `mapstructure:"group_name"`
+	ConsumeFromWhere    string        `mapstructure:"consume_from_where"`
+	ConsumeMessageBatch int           `mapstructure:"consume_message_batch"`
+	PullInterval        time.Duration `mapstructure:"pull_interval"`
+	PullBatchSize       int           `mapstructure:"pull_batch_size"`
 }
 
 // Load 加载配置

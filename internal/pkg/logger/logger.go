@@ -176,6 +176,16 @@ func GetLogger() Logger {
 	return defaultLogger
 }
 
+// GetLogrusLogger 获取底层的logrus.Logger实例
+func GetLogrusLogger() *logrus.Logger {
+	logger := GetLogger()
+	if logrusImpl, ok := logger.(*logrusLogger); ok {
+		return logrusImpl.logger
+	}
+	// 如果转换失败，返回一个新的logrus实例
+	return logrus.New()
+}
+
 // 便捷方法
 func Debug(args ...interface{}) {
 	GetLogger().Debug(args...)
