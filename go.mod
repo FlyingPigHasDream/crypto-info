@@ -1,6 +1,6 @@
 module crypto-info
 
-go 1.21.0
+go 1.23.5
 
 require (
 	github.com/bytedance/sonic v1.13.3 // indirect
@@ -15,13 +15,13 @@ require (
 )
 
 require (
+	github.com/apache/rocketmq-client-go/v2 v2.1.2
 	github.com/cloudwego/hertz v0.10.1
 	github.com/cloudwego/kitex v0.14.1
 	github.com/cloudwego/prutal v0.1.2
 )
 
 require (
-	github.com/apache/rocketmq-client-go/v2 v2.1.2 // indirect
 	github.com/bytedance/gopkg v0.1.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -62,7 +62,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
@@ -92,7 +91,6 @@ require (
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	stathat.com/c/consistent v1.0.0 // indirect
