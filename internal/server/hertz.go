@@ -9,6 +9,7 @@ import (
 	"crypto-info/internal/handler"
 	"crypto-info/internal/pkg/database"
 	"crypto-info/internal/pkg/logger"
+	"crypto-info/internal/pkg/session"
 	"crypto-info/internal/service"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -19,9 +20,10 @@ import (
 
 // HertzServer Hertz HTTP服务器
 type HertzServer struct {
-	server *server.Hertz
-	config *config.Config
-	logger logger.Logger
+	server         *server.Hertz
+	config         *config.Config
+	logger         logger.Logger
+	sessionManager *session.Manager
 }
 
 // NewHertzServer 创建新的Hertz服务器
@@ -37,6 +39,22 @@ func NewHertzServer(cfg *config.Config, log logger.Logger, redisClient database.
 	// 使用默认Hertz日志配置
 	// TODO: 后续可以创建适配器来集成现有的logger
 
+	// 创建session管理器
+	var sessionManager *session.Manager
+	if cfg.Security.Session.Enabled {
+		var err error
+		if redisClient != nil {
+			sessionManager, err = session.NewManager(&cfg.Security.Session, redisClient.GetClient(), log)
+		} else {
+			sessionManager, err = session.NewManager(&cfg.Security.Session, nil, log)
+		}
+		if err != nil {
+			log.Errorf("Failed to create session manager: %v", err)
+		} else {
+			log.Info("Session manager initialized for Hertz")
+		}
+	}
+
 	// 创建服务层
 	priceService := service.NewPriceService(redisClient, cfg)
 	volumeService := service.NewVolumeService(redisClient, cfg)
@@ -44,17 +62,22 @@ func NewHertzServer(cfg *config.Config, log logger.Logger, redisClient database.
 	// 创建处理器
 	priceHandler := handler.NewPriceHandler(priceService)
 	volumeHandler := handler.NewVolumeHandler(volumeService)
+	var sessionHandler *handler.SessionHandler
+	if sessionManager != nil {
+		sessionHandler = handler.NewSessionHandler(sessionManager)
+	}
 
 	// 设置中间件
 	setupHertzMiddleware(h, cfg, log)
 
 	// 设置路由
-	setupHertzRoutes(h, priceHandler, volumeHandler)
+	setupHertzRoutes(h, priceHandler, volumeHandler, sessionHandler)
 
 	return &HertzServer{
-		server: h,
-		config: cfg,
-		logger: log,
+		server:         h,
+		config:         cfg,
+		logger:         log,
+		sessionManager: sessionManager,
 	}
 }
 
@@ -133,7 +156,7 @@ func setupHertzMiddleware(h *server.Hertz, cfg *config.Config, log logger.Logger
 }
 
 // setupHertzRoutes 设置Hertz路由
-func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volumeHandler *handler.VolumeHandler) {
+func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volumeHandler *handler.VolumeHandler, sessionHandler *handler.SessionHandler) {
 	// 健康检查
 	h.GET("/health", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusOK, map[string]interface{}{
@@ -164,6 +187,17 @@ func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volum
 		v1.GET("/crypto/volume/fluctuation", adaptHertzHandler(volumeHandler.GetMarketVolumeFluctuation))
 		v1.GET("/crypto/volume/comparison", adaptHertzHandler(volumeHandler.GetVolumeComparison))
 		v1.GET("/crypto/volume/top", adaptHertzHandler(volumeHandler.GetTopVolumeCoins))
+
+		// Session相关API
+		if sessionHandler != nil {
+			v1.GET("/session/info", adaptHertzHandler(sessionHandler.GetSession))
+			v1.GET("/session/status", adaptHertzHandler(sessionHandler.SessionStatus))
+			v1.POST("/session/data", adaptHertzHandler(sessionHandler.SetSessionData))
+			v1.GET("/session/data/:key", adaptHertzHandler(sessionHandler.GetSessionData))
+			v1.DELETE("/session/data/:key", adaptHertzHandler(sessionHandler.RemoveSessionData))
+			v1.POST("/session/refresh", adaptHertzHandler(sessionHandler.RefreshSession))
+			v1.DELETE("/session/destroy", adaptHertzHandler(sessionHandler.DestroySession))
+		}
 	}
 
 	// 兼容旧路由
