@@ -4,6 +4,10 @@ FROM golang:1.21-alpine AS builder
 # 设置工作目录
 WORKDIR /app
 
+# 设置Go代理和Alpine镜像源
+ENV GOPROXY=https://goproxy.cn,direct
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
 # 安装必要的包
 RUN apk add --no-cache git ca-certificates tzdata
 
@@ -21,6 +25,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o crypto-info ./cmd
 
 # Final stage
 FROM alpine:latest
+
+# 设置Alpine镜像源
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 # 安装ca证书和时区数据
 RUN apk --no-cache add ca-certificates tzdata

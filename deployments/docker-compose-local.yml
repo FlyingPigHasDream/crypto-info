@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Redis缓存服务 - 使用预构建镜像
+  redis:
+    image: redis:7-alpine
+    container_name: crypto-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ../configs/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - crypto-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 应用服务 - 使用host网络模式运行本地构建的二进制文件
+  crypto-info:
+    image: alpine:latest
+    container_name: crypto-info
+    network_mode: host
+    environment:
+      - CRYPTO_APP_ENV=development
+      - CRYPTO_DATABASE_REDIS_HOST=localhost
+      - CRYPTO_DATABASE_REDIS_PORT=6379
+      - CRYPTO_LOG_LEVEL=debug
+    volumes:
+      - ../:/app
+    working_dir: /app
+    command: sh -c "apk add --no-cache go && go run cmd/server/main_hertz.go"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  crypto-network:
+    driver: bridge

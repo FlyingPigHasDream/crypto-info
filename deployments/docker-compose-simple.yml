@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 应用服务
+  crypto-info:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile
+    container_name: crypto-info
+    ports:
+      - "8080:8080"
+      - "9090:9090"  # gRPC端口
+    environment:
+      - CRYPTO_APP_ENV=development
+      - CRYPTO_DATABASE_REDIS_HOST=redis
+      - CRYPTO_DATABASE_REDIS_PORT=6379
+      - CRYPTO_LOG_LEVEL=debug
+    depends_on:
+      - redis
+    volumes:
+      - ../configs:/app/configs:ro
+      - ../logs:/app/logs
+    networks:
+      - crypto-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: crypto-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ../configs/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - crypto-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  crypto-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
