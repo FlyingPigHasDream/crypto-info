@@ -78,11 +78,27 @@ rate_limit:
 
 security:
   cors:
+    enabled: true
     allowed_origins: ["https://crypto-info.com", "https://api.crypto-info.com"]
-    allow_credentials: false
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization", "X-Request-ID"]
+    allow_credentials: true
+    max_age: 86400
   jwt:
     secret: "${JWT_SECRET}"
     expire_time: 2h
+    issuer: "crypto-info"
+  session:
+    enabled: true
+    cookie_name: "crypto_session"
+    secret: "${SESSION_SECRET}"
+    max_age: 24h
+    secure: true
+    http_only: true
+    same_site: "strict"
+    domain: ".crypto-info.com"
+    path: "/"
+    store: "redis"
 
 business:
   mock_data_enabled: false # 生产环境禁用模拟数据

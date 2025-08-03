@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"crypto-info/internal/pkg/database"
 	"crypto-info/internal/pkg/logger"
 	"crypto-info/internal/pkg/middleware"
+	"crypto-info/internal/pkg/session"
 	"crypto-info/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -17,23 +19,39 @@ import (
 
 // HTTPServer HTTP服务器
 type HTTPServer struct {
-	server *http.Server
-	config *config.Config
-	logger logger.Logger
+	server         *http.Server
+	config         *config.Config
+	logger         logger.Logger
+	sessionManager *session.Manager
 }
 
 // NewHTTPServer 创建HTTP服务器
 func NewHTTPServer(cfg *config.Config, redisClient database.RedisClient) (*HTTPServer, error) {
 	log := logger.GetLogger()
 
+	// 创建session管理器
+	var sessionManager *session.Manager
+	if cfg.Security.Session.Enabled {
+		var err error
+		if redisClient != nil {
+			sessionManager, err = session.NewManager(&cfg.Security.Session, redisClient.GetClient(), log)
+		} else {
+			sessionManager, err = session.NewManager(&cfg.Security.Session, nil, log)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to create session manager: %w", err)
+		}
+		log.Info("Session manager initialized")
+	}
+
 	// 创建Gin引擎
 	router := gin.New()
 
 	// 注册中间件
-	setupMiddleware(router, cfg)
+	setupMiddleware(router, cfg, sessionManager)
 
 	// 注册路由
-	setupRoutes(router, cfg, redisClient)
+	setupRoutes(router, cfg, redisClient, sessionManager)
 
 	// 创建HTTP服务器
 	server := &http.Server{
@@ -46,9 +64,10 @@ func NewHTTPServer(cfg *config.Config, redisClient database.RedisClient) (*HTTPS
 	}
 
 	return &HTTPServer{
-		server: server,
-		config: cfg,
-		logger: log,
+		server:         server,
+		config:         cfg,
+		logger:         log,
+		sessionManager: sessionManager,
 	}, nil
 }
 
@@ -63,7 +82,7 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 }
 
 // setupMiddleware 设置中间件
-func setupMiddleware(router *gin.Engine, cfg *config.Config) {
+func setupMiddleware(router *gin.Engine, cfg *config.Config, sessionManager *session.Manager) {
 	// 请求ID中间件
 	router.Use(middleware.RequestID())
 
@@ -92,12 +111,17 @@ func setupMiddleware(router *gin.Engine, cfg *config.Config) {
 		router.Use(middleware.HealthCheck(cfg.Monitoring.HealthCheck.Path))
 	}
 
+	// Session中间件
+	if sessionManager != nil {
+		router.Use(middleware.Session(sessionManager))
+	}
+
 	// 超时中间件
 	router.Use(middleware.Timeout(30 * time.Second))
 }
 
 // setupRoutes 设置路由
-func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.RedisClient) {
+func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.RedisClient, sessionManager *session.Manager) {
 	// 创建服务层
 	priceService := service.NewPriceService(redisClient, cfg)
 	volumeService := service.NewVolumeService(redisClient, cfg)
@@ -105,6 +129,10 @@ func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.Re
 	// 创建处理器
 	priceHandler := handler.NewPriceHandler(priceService)
 	volumeHandler := handler.NewVolumeHandler(volumeService)
+	var sessionHandler *handler.SessionHandler
+	if sessionManager != nil {
+		sessionHandler = handler.NewSessionHandler(sessionManager)
+	}
 
 	// API v1 路由组
 	v1 := router.Group("/api/v1")
@@ -123,6 +151,20 @@ func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.Re
 				volume.GET("/fluctuation", volumeHandler.GetMarketVolumeFluctuation)
 				volume.GET("/comparison", volumeHandler.GetVolumeComparison)
 				volume.GET("/top", volumeHandler.GetTopVolumeCoins)
+			}
+		}
+
+		// Session相关路由
+		if sessionHandler != nil {
+			session := v1.Group("/session")
+			{
+				session.GET("/info", sessionHandler.GetSession)
+				session.GET("/status", sessionHandler.SessionStatus)
+				session.POST("/data", sessionHandler.SetSessionData)
+				session.GET("/data/:key", sessionHandler.GetSessionData)
+				session.DELETE("/data/:key", sessionHandler.RemoveSessionData)
+				session.POST("/refresh", sessionHandler.RefreshSession)
+				session.DELETE("/destroy", sessionHandler.DestroySession)
 			}
 		}
 	}

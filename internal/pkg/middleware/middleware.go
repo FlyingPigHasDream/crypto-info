@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"crypto-info/internal/pkg/logger"
+	"crypto-info/internal/pkg/session"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -194,7 +195,12 @@ func HealthCheck(path string) gin.HandlerFunc {
 	}
 }
 
-// 辅助函数
+// Session Session中间件
+func Session(manager *session.Manager) gin.HandlerFunc {
+	return session.Middleware(manager)
+}
+
+// joinStrings 辅助函数
 func joinStrings(strs []string, sep string) string {
 	if len(strs) == 0 {
 		return ""

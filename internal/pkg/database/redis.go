@@ -23,6 +23,7 @@ type RedisClient interface {
 	HSet(ctx context.Context, key string, values ...interface{}) error
 	HDel(ctx context.Context, key string, fields ...string) error
 	HExists(ctx context.Context, key, field string) (bool, error)
+	GetClient() *redis.Client
 	Close() error
 	Ping(ctx context.Context) error
 }
@@ -182,6 +183,11 @@ func (r *redisClient) Close() error {
 	}
 	r.logger.Info("Redis connection closed")
 	return nil
+}
+
+// GetClient 获取底层Redis客户端
+func (r *redisClient) GetClient() *redis.Client {
+	return r.client
 }
 
 // Ping 测试连接

@@ -106,14 +106,24 @@ security:
     enabled: true
     allowed_origins: ["*"]
     allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    allowed_headers: ["*"]
-    exposed_headers: ["*"]
+    allowed_headers: ["Content-Type", "Authorization", "X-Request-ID"]
     allow_credentials: true
     max_age: 86400
   jwt:
     secret: "your-jwt-secret-key"
     expire_time: 24h
     issuer: "crypto-info"
+  session:
+    enabled: true
+    cookie_name: "crypto_session"
+    secret: "your-session-secret-key-32-chars"
+    max_age: 24h
+    secure: false
+    http_only: true
+    same_site: "lax"
+    domain: ""
+    path: "/"
+    store: "redis"
 
 # 业务配置
 business:

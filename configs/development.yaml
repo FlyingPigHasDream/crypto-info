@@ -45,5 +45,29 @@ monitoring:
 rate_limit:
   enabled: false # 开发环境关闭限流
 
+security:
+  cors:
+    enabled: true
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization", "X-Request-ID"]
+    allow_credentials: true
+    max_age: 86400
+  jwt:
+    secret: "dev-jwt-secret-key"
+    expire_time: 24h
+    issuer: "crypto-info-dev"
+  session:
+    enabled: true
+    cookie_name: "crypto_session_dev"
+    secret: "dev-session-secret-key-32-chars"
+    max_age: 24h
+    secure: false
+    http_only: true
+    same_site: "lax"
+    domain: ""
+    path: "/"
+    store: "memory" # 开发环境使用内存存储
+
 business:
   mock_data_enabled: true # 开发环境启用模拟数据

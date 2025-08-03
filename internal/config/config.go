@@ -165,8 +165,9 @@ type RateLimit struct {
 
 // Security 安全配置
 type Security struct {
-	CORS CORSConfig `mapstructure:"cors"`
-	JWT  JWTConfig  `mapstructure:"jwt"`
+	CORS    CORSConfig    `mapstructure:"cors"`
+	JWT     JWTConfig     `mapstructure:"jwt"`
+	Session SessionConfig `mapstructure:"session"`
 }
 
 // CORSConfig CORS配置
@@ -185,6 +186,20 @@ type JWTConfig struct {
 	Secret     string        `mapstructure:"secret"`
 	ExpireTime time.Duration `mapstructure:"expire_time"`
 	Issuer     string        `mapstructure:"issuer"`
+}
+
+// SessionConfig Session配置
+type SessionConfig struct {
+	Enabled    bool          `mapstructure:"enabled"`
+	CookieName string        `mapstructure:"cookie_name"`
+	Secret     string        `mapstructure:"secret"`
+	MaxAge     time.Duration `mapstructure:"max_age"`
+	Secure     bool          `mapstructure:"secure"`
+	HttpOnly   bool          `mapstructure:"http_only"`
+	SameSite   string        `mapstructure:"same_site"`
+	Domain     string        `mapstructure:"domain"`
+	Path       string        `mapstructure:"path"`
+	Store      string        `mapstructure:"store"` // redis, memory, file
 }
 
 // Business 业务配置
