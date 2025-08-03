@@ -56,12 +56,17 @@ func NewHertzServer(cfg *config.Config, log logger.Logger, redisClient database.
 	}
 
 	// 创建服务层
-	priceService := service.NewPriceService(redisClient, cfg)
+	bscService, err := service.NewBSCService(cfg, redisClient)
+	if err != nil {
+		log.Errorf("Failed to create BSC service: %v", err)
+	}
+	priceService := service.NewPriceService(redisClient, cfg, bscService)
 	volumeService := service.NewVolumeService(redisClient, cfg)
 
 	// 创建处理器
 	priceHandler := handler.NewPriceHandler(priceService)
 	volumeHandler := handler.NewVolumeHandler(volumeService)
+	bscHandler := handler.NewBSCHandler(bscService)
 	var sessionHandler *handler.SessionHandler
 	if sessionManager != nil {
 		sessionHandler = handler.NewSessionHandler(sessionManager)
@@ -71,7 +76,7 @@ func NewHertzServer(cfg *config.Config, log logger.Logger, redisClient database.
 	setupHertzMiddleware(h, cfg, log)
 
 	// 设置路由
-	setupHertzRoutes(h, priceHandler, volumeHandler, sessionHandler)
+	setupHertzRoutes(h, priceHandler, volumeHandler, bscHandler, sessionHandler)
 
 	return &HertzServer{
 		server:         h,
@@ -156,7 +161,7 @@ func setupHertzMiddleware(h *server.Hertz, cfg *config.Config, log logger.Logger
 }
 
 // setupHertzRoutes 设置Hertz路由
-func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volumeHandler *handler.VolumeHandler, sessionHandler *handler.SessionHandler) {
+func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volumeHandler *handler.VolumeHandler, bscHandler *handler.BSCHandler, sessionHandler *handler.SessionHandler) {
 	// 健康检查
 	h.GET("/health", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusOK, map[string]interface{}{
@@ -187,6 +192,16 @@ func setupHertzRoutes(h *server.Hertz, priceHandler *handler.PriceHandler, volum
 		v1.GET("/crypto/volume/fluctuation", adaptHertzHandler(volumeHandler.GetMarketVolumeFluctuation))
 		v1.GET("/crypto/volume/comparison", adaptHertzHandler(volumeHandler.GetVolumeComparison))
 		v1.GET("/crypto/volume/top", adaptHertzHandler(volumeHandler.GetTopVolumeCoins))
+
+		// BSC链上数据监控API
+		v1.GET("/bsc/status", adaptHertzHandler(bscHandler.GetStatus))
+		v1.GET("/bsc/latest-block", adaptHertzHandler(bscHandler.GetLatestBlock))
+		v1.GET("/bsc/transactions", adaptHertzHandler(bscHandler.GetTransactions))
+		v1.GET("/bsc/token-transfers", adaptHertzHandler(bscHandler.GetTokenTransfers))
+		v1.GET("/bsc/swap-events", adaptHertzHandler(bscHandler.GetSwapEvents))
+		v1.GET("/bsc/pair-info/:address", adaptHertzHandler(bscHandler.GetPairInfo))
+		v1.POST("/bsc/start-monitoring", adaptHertzHandler(bscHandler.StartMonitoring))
+		v1.POST("/bsc/stop-monitoring", adaptHertzHandler(bscHandler.StopMonitoring))
 
 		// Session相关API
 		if sessionHandler != nil {

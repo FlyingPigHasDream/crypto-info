@@ -127,11 +127,42 @@ security:
 
 # 业务配置
 business:
-  supported_symbols: ["BTC", "ETH", "LTC", "BCH", "ADA", "DOT", "LINK", "XRP"]
+  supported_symbols: ["BTC", "ETH", "LTC", "BCH", "ADA", "DOT", "LINK", "XRP", "BNB"]
   default_symbol: "BTC"
   max_analysis_days: 365
   default_analysis_days: 10
   mock_data_enabled: true
+
+# BSC链上数据监控配置
+bsc:
+  enabled: true
+  rpc_url: "https://bsc-dataseed1.binance.org/"
+  websocket_url: "wss://bsc-ws-node.nariox.org:443/ws"
+  chain_id: 56
+  block_confirmation: 12
+  monitoring:
+    enabled: true
+    interval: 10s
+    batch_size: 100
+  contracts:
+    # PancakeSwap Router
+    pancake_router: "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+    # WBNB Token
+    wbnb: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+    # USDT Token
+    usdt: "0x55d398326f99059fF775485246999027B3197955"
+    # BUSD Token
+    busd: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
+  events:
+    # 监控的事件类型
+    transfer: true
+    swap: true
+    liquidity: true
+    price_update: true
+  cache:
+    enabled: true
+    ttl: 300s
+    prefix: "bsc:"
 
 # RocketMQ 消息队列配置
 rocketmq:

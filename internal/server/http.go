@@ -123,12 +123,20 @@ func setupMiddleware(router *gin.Engine, cfg *config.Config, sessionManager *ses
 // setupRoutes 设置路由
 func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.RedisClient, sessionManager *session.Manager) {
 	// 创建服务层
-	priceService := service.NewPriceService(redisClient, cfg)
+	bscService, err := service.NewBSCService(cfg, redisClient)
+	if err != nil {
+		logger.GetLogger().Errorf("Failed to create BSC service: %v", err)
+	}
+	priceService := service.NewPriceService(redisClient, cfg, bscService)
 	volumeService := service.NewVolumeService(redisClient, cfg)
 
 	// 创建处理器
 	priceHandler := handler.NewPriceHandler(priceService)
 	volumeHandler := handler.NewVolumeHandler(volumeService)
+	var bscHandler *handler.BSCHandler
+	if bscService != nil {
+		bscHandler = handler.NewBSCHandler(bscService)
+	}
 	var sessionHandler *handler.SessionHandler
 	if sessionManager != nil {
 		sessionHandler = handler.NewSessionHandler(sessionManager)
@@ -151,6 +159,21 @@ func setupRoutes(router *gin.Engine, cfg *config.Config, redisClient database.Re
 				volume.GET("/fluctuation", volumeHandler.GetMarketVolumeFluctuation)
 				volume.GET("/comparison", volumeHandler.GetVolumeComparison)
 				volume.GET("/top", volumeHandler.GetTopVolumeCoins)
+			}
+		}
+
+		// BSC链上数据监控路由
+		if bscHandler != nil {
+			bsc := v1.Group("/bsc")
+			{
+				bsc.GET("/status", bscHandler.GetStatus)
+				bsc.GET("/block/latest", bscHandler.GetLatestBlock)
+				bsc.GET("/transactions", bscHandler.GetTransactions)
+				bsc.GET("/token/transfers", bscHandler.GetTokenTransfers)
+				bsc.GET("/swap/events", bscHandler.GetSwapEvents)
+				bsc.GET("/pair/info", bscHandler.GetPairInfo)
+				bsc.POST("/monitoring/start", bscHandler.StartMonitoring)
+				bsc.POST("/monitoring/stop", bscHandler.StopMonitoring)
 			}
 		}
 

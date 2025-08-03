@@ -23,14 +23,16 @@ type priceService struct {
 	redisClient database.RedisClient
 	config      *config.Config
 	logger      logger.Logger
+	bscService  BSCService
 }
 
 // NewPriceService 创建价格服务
-func NewPriceService(redisClient database.RedisClient, cfg *config.Config) PriceService {
+func NewPriceService(redisClient database.RedisClient, cfg *config.Config, bscService BSCService) PriceService {
 	return &priceService{
 		redisClient: redisClient,
 		config:      cfg,
 		logger:      logger.GetLogger(),
+		bscService:  bscService,
 	}
 }
 
@@ -83,8 +85,23 @@ func (s *priceService) fetchPrice(ctx context.Context, symbol string) (*model.Pr
 		return s.generateMockPrice(symbol), nil
 	}
 
-	// TODO: 实现真实的API调用
-	// 这里应该调用外部API获取真实价格
+	// 优先使用BSC链上流动性数据计算价格
+	if s.bscService != nil && s.config.BSC.Enabled {
+		price, err := s.bscService.GetTokenPriceInUSDT(ctx, symbol)
+		if err == nil {
+			priceFloat, _ := price.Float64()
+			return &model.PriceResponse{
+				Symbol:    symbol,
+				Price:     priceFloat,
+				Currency:  "USDT",
+				UpdatedAt: time.Now().Format(time.RFC3339),
+				Source:    "BSC_Liquidity",
+			}, nil
+		}
+		s.logger.Warnf("Failed to get price from BSC for %s: %v, falling back to mock data", symbol, err)
+	}
+
+	// 如果BSC服务不可用，回退到模拟数据
 	return s.generateMockPrice(symbol), nil
 }
 

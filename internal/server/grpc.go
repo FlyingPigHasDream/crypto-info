@@ -26,7 +26,11 @@ type GRPCServer struct {
 // NewGRPCServer 创建新的gRPC服务器
 func NewGRPCServer(cfg *config.Config, log logger.Logger, redisClient database.RedisClient) *GRPCServer {
 	// 创建服务层
-	priceService := service.NewPriceService(redisClient, cfg)
+	bscService, err := service.NewBSCService(cfg, redisClient)
+	if err != nil {
+		log.Errorf("Failed to create BSC service: %v", err)
+	}
+	priceService := service.NewPriceService(redisClient, cfg, bscService)
 
 	// 创建gRPC服务实现
 	priceServiceImpl := grpc.NewCryptoPriceService(priceService)

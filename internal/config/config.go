@@ -22,6 +22,7 @@ type Config struct {
 	RateLimit  RateLimit  `mapstructure:"rate_limit"`
 	Security   Security   `mapstructure:"security"`
 	Business   Business   `mapstructure:"business"`
+	BSC        BSC        `mapstructure:"bsc"`
 	RocketMQ   RocketMQ   `mapstructure:"rocketmq"`
 }
 
@@ -234,6 +235,49 @@ type Consumer struct {
 	ConsumeMessageBatch int           `mapstructure:"consume_message_batch"`
 	PullInterval        time.Duration `mapstructure:"pull_interval"`
 	PullBatchSize       int           `mapstructure:"pull_batch_size"`
+}
+
+// BSC BSC链上数据监控配置
+type BSC struct {
+	Enabled        bool               `mapstructure:"enabled"`
+	RPCURL         string             `mapstructure:"rpc_url"`
+	WebSocketURL   string             `mapstructure:"websocket_url"`
+	ChainID        int64              `mapstructure:"chain_id"`
+	BlockConfirmation int             `mapstructure:"block_confirmation"`
+	Monitoring     BSCMonitoring      `mapstructure:"monitoring"`
+	Contracts      BSCContracts       `mapstructure:"contracts"`
+	Events         BSCEvents          `mapstructure:"events"`
+	Cache          BSCCache           `mapstructure:"cache"`
+}
+
+// BSCMonitoring BSC监控配置
+type BSCMonitoring struct {
+	Enabled   bool          `mapstructure:"enabled"`
+	Interval  time.Duration `mapstructure:"interval"`
+	BatchSize int           `mapstructure:"batch_size"`
+}
+
+// BSCContracts BSC合约地址配置
+type BSCContracts struct {
+	PancakeRouter string `mapstructure:"pancake_router"`
+	WBNB          string `mapstructure:"wbnb"`
+	USDT          string `mapstructure:"usdt"`
+	BUSD          string `mapstructure:"busd"`
+}
+
+// BSCEvents BSC事件监控配置
+type BSCEvents struct {
+	Transfer    bool `mapstructure:"transfer"`
+	Swap        bool `mapstructure:"swap"`
+	Liquidity   bool `mapstructure:"liquidity"`
+	PriceUpdate bool `mapstructure:"price_update"`
+}
+
+// BSCCache BSC缓存配置
+type BSCCache struct {
+	Enabled bool          `mapstructure:"enabled"`
+	TTL     time.Duration `mapstructure:"ttl"`
+	Prefix  string        `mapstructure:"prefix"`
 }
 
 // Load 加载配置
