@@ -34,7 +34,7 @@ log:
 # 数据库配置
 database:
   redis:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 6379
     password: ""
     db: 0
