@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # MySQL数据库服务 - 独立部署
+  mysql:
+    image: mysql:8.0
+    container_name: crypto-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=crypto_root_2024
+      - MYSQL_DATABASE=crypto_info
+      - MYSQL_USER=crypto_user
+      - MYSQL_PASSWORD=crypto_pass_2024
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - mysql_config:/etc/mysql/conf.d
+    networks:
+      - mysql-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pcrypto_root_2024"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  mysql_data:
+    driver: local
+  mysql_config:
+    driver: local
+
+networks:
+  mysql-network:
+    driver: bridge
+    name: crypto-mysql-network
